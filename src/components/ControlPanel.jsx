@@ -10,7 +10,7 @@ import LabelSection from './sections/LabelSection';
 import ExportSection from './sections/ExportSection';
 
 export default function ControlPanel({
-  config, update,
+  config, update, reinit,
   qrInstance, buildOptions, getRadiusPx,
   activeModuleId,
   className = '',
@@ -29,7 +29,7 @@ export default function ControlPanel({
       <DotsSection config={config} update={update} />
       <CornersSection config={config} update={update} />
       <ColorsSection config={config} update={update} />
-      <LogoSection config={config} update={update} />
+      <LogoSection config={config} update={update} reinit={reinit} />
       {config.label && <LabelSection config={config} update={update} />}
       <ExportSection
         config={config}

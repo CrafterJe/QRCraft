@@ -4,15 +4,26 @@ import Toggle from '../ui/Toggle';
 
 const inputClass = 'w-full px-3 py-2 bg-base border border-edge rounded-lg text-pale text-sm outline-none focus:border-primary transition-colors';
 
-export default function LogoSection({ config, update }) {
+export default function LogoSection({ config, update, reinit }) {
   const fileRef = useRef(null);
 
   const handleFile = (file) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      update('logoUrl', ev.target.result);
-      update('logoFileName', file.name);
+      const img = new Image();
+      img.onload = () => {
+        // Crop to square so qr-code-styling centers it cleanly
+        const s = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = s;
+        canvas.height = s;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, (s - img.width) / 2, (s - img.height) / 2);
+        update('logoUrl', canvas.toDataURL('image/png'));
+        update('logoFileName', file.name);
+      };
+      img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   };
@@ -41,6 +52,21 @@ export default function LogoSection({ config, update }) {
           {config.logoFileName || 'Haz clic o arrastra tu logo aquí'}
         </span>
       </div>
+
+      {config.logoUrl && (
+        <button
+          type="button"
+          onClick={() => {
+            update('logoUrl', null);
+            update('logoFileName', null);
+            if (fileRef.current) fileRef.current.value = '';
+            reinit();
+          }}
+          className="w-full py-1.5 rounded-lg border border-edge text-xs text-dim hover:border-red-500/50 hover:text-red-400 transition-colors"
+        >
+          Quitar logo
+        </button>
+      )}
 
       {config.logoUrl && (
         <>

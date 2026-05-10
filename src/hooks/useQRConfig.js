@@ -76,8 +76,7 @@ export function useQRConfig() {
     if (config.logoUrl) {
       opts.image = config.logoUrl;
       opts.imageOptions = {
-        width: size * (config.logoSize / 100),
-        height: size * (config.logoSize / 100),
+        imageSize: config.logoSize / 100,
         margin: config.logoMargin,
         hideBackgroundDots: config.hideLogoBg,
         crossOrigin: 'anonymous',
@@ -98,5 +97,10 @@ export function useQRConfig() {
     }
   }, [buildOptions]);
 
-  return { config, update, qrRef, qrInstance, buildOptions, getRadiusPx };
+  const reinit = useCallback(() => {
+    if (qrRef.current) qrRef.current.innerHTML = '';
+    qrInstance.current = null;
+  }, []);
+
+  return { config, update, reinit, qrRef, qrInstance, buildOptions, getRadiusPx };
 }

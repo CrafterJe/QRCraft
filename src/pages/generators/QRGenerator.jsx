@@ -36,7 +36,7 @@ function MobileTab({ label, active, onClick }) {
 }
 
 export default function QRGenerator() {
-  const { config, update, qrRef, qrInstance, buildOptions, getRadiusPx } = useQRConfig();
+  const { config, update, reinit, qrRef, qrInstance, buildOptions, getRadiusPx } = useQRConfig();
 
   const [activeModuleId, setActiveModuleId] = useState(() => {
     const hash = window.location.hash.slice(1);
@@ -90,6 +90,7 @@ export default function QRGenerator() {
           qrInstance={qrInstance}
           buildOptions={buildOptions}
           getRadiusPx={getRadiusPx}
+          reinit={reinit}
           activeModuleId={activeModuleId}
           className={mobileTab !== 'config' ? 'hidden lg:flex' : ''}
         />
