@@ -2,7 +2,6 @@
   "rewrites": [
     { "source": "/QRCraft/assets/:path*", "destination": "/assets/:path*" },
     { "source": "/QRCraft",               "destination": "/index.html"    },
-    { "source": "/QRCraft/:path*",        "destination": "/index.html"    },
-    { "source": "/(.*)",                  "destination": "/index.html"    }
+    { "source": "/QRCraft/:path*",        "destination": "/index.html"    }
   ]
 }
