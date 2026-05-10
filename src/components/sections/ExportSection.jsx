@@ -22,7 +22,7 @@ export default function ExportSection({ config, update, qrInstance, buildOptions
       <div className="grid grid-cols-2 gap-2 mt-1">
         <button
           type="button"
-          onClick={() => downloadPNG(qrInstance.current, name, getRadiusPx(), buildOptions)}
+          onClick={() => downloadPNG(qrInstance.current, name, getRadiusPx(), buildOptions, config)}
           className="py-3 rounded-[10px] text-sm font-bold text-white bg-green-700 hover:opacity-90 active:scale-[.98] transition-all"
         >
           Descargar PNG
@@ -38,7 +38,7 @@ export default function ExportSection({ config, update, qrInstance, buildOptions
 
       <button
         type="button"
-        onClick={() => downloadForCanva(name, config.borderRadius, buildOptions)}
+        onClick={() => downloadForCanva(name, config.borderRadius, buildOptions, config)}
         className="py-3 mt-1 rounded-[10px] text-sm font-bold bg-tint/60 text-faint border border-primary/40 hover:border-primary hover:bg-tint transition-all active:scale-[.98]"
       >
         Exportar para Canva (PNG 1200px)

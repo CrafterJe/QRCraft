@@ -2,9 +2,9 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import QRCodeStyling from 'qr-code-styling';
 
 const DEFAULT = {
-  data: 'https://maps.google.com/?q=TecnoFix+Puebla',
+  data: 'https://crafterje.com/QRCraft',
   size: 400,
-  margin: 2,
+  margin: 3,
   errorCorrection: 'H',
   borderRadius: 0,
   dotStyle: 'square',
@@ -23,7 +23,12 @@ const DEFAULT = {
   logoSize: 22,
   logoMargin: 5,
   hideLogoBg: true,
-  fileName: 'qr-tecnofix',
+  fileName: 'qr-crafterje',
+  label: '',
+  labelSize: 18,
+  labelBold: false,
+  labelItalic: false,
+  labelColor: '#000000',
 };
 
 export function useQRConfig() {
@@ -59,7 +64,7 @@ export function useQRConfig() {
     const opts = {
       width: size,
       height: size,
-      data: config.data || 'https://example.com',
+      data: config.data || 'https://crafterje.com/QRCraft',
       margin: config.margin,
       qrOptions: { errorCorrectionLevel: config.errorCorrection },
       dotsOptions,

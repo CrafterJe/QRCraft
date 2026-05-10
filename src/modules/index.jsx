@@ -1,4 +1,6 @@
+// @refresh reset
 import urlModule from './basics/url';
+import wifiModule from './basics/wifi';
 
 /** @type {import('../types/module').QRCategory[]} */
 export const CATEGORIES = [
@@ -32,17 +34,7 @@ export const MODULES = [
     id: 'text', label: 'Texto plano', categoryId: 'basics',
     icon: <Si d="M4 6h16M4 12h16M4 18h10" />,
   }),
-  locked({
-    id: 'wifi', label: 'Wi-Fi', categoryId: 'basics',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-        <circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-    ),
-  }),
+  wifiModule,
 
   // ── Contacto y comunicación ────────────────────────────────────────────────
   locked({

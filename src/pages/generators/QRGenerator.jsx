@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQRConfig } from '../../hooks/useQRConfig';
+import { MODULES } from '../../modules/index.jsx';
 import TypeNavbar from '../../components/TypeNavbar';
 import ControlPanel from '../../components/ControlPanel';
 import QRPreview from '../../components/QRPreview';
@@ -36,12 +37,24 @@ function MobileTab({ label, active, onClick }) {
 
 export default function QRGenerator() {
   const { config, update, qrRef, qrInstance, buildOptions, getRadiusPx } = useQRConfig();
-  const [activeModuleId, setActiveModuleId] = useState('url');
+
+  const [activeModuleId, setActiveModuleId] = useState(() => {
+    const hash = window.location.hash.slice(1);
+    return MODULES.find(m => m.id === hash && m.available) ? hash : 'url';
+  });
+
   const [mobileTab, setMobileTab] = useState('config');
 
   const handleModuleChange = (moduleId) => {
+    // Wipe the canvas immediately so the old QR doesn't linger while the new
+    // buildOptions fires through the useEffect cycle.
+    if (qrRef.current) qrRef.current.innerHTML = '';
+    qrInstance.current = null;
+
     setActiveModuleId(moduleId);
     update('data', '');
+    update('label', '');
+    window.location.hash = moduleId;
   };
 
   return (
@@ -51,7 +64,7 @@ export default function QRGenerator() {
       <header className="shrink-0 bg-surface border-b border-edge px-5 sm:px-7 py-3.5 flex items-center gap-3">
         <QRIcon />
         <div>
-          <h1 className="text-base sm:text-lg text-primary tracking-[0.5px] font-semibold leading-tight">
+          <h1 className="text-[1rem] sm:text-lg text-primary tracking-[0.5px] font-semibold leading-tight">
             Generador QR con Logo
           </h1>
           <span className="hidden sm:block text-xs text-dim">

@@ -6,6 +6,7 @@ import DotsSection from './sections/DotsSection';
 import CornersSection from './sections/CornersSection';
 import ColorsSection from './sections/ColorsSection';
 import LogoSection from './sections/LogoSection';
+import LabelSection from './sections/LabelSection';
 import ExportSection from './sections/ExportSection';
 
 export default function ControlPanel({
@@ -20,7 +21,7 @@ export default function ControlPanel({
   return (
     <div className={`panel-scroll bg-surface border-r border-edge overflow-y-auto flex flex-col gap-4.5 p-5 flex-1 min-h-0 lg:flex-none lg:w-105 ${className}`}>
       {ActiveForm
-        ? <ActiveForm value={config.data} onChange={v => update('data', v)} />
+        ? <ActiveForm value={config.data} onChange={v => update('data', v)} onLabelChange={v => update('label', v)} onFileNameChange={v => update('fileName', v)} />
         : <ComingSoon label={activeModule.label} />
       }
       <QRSettingsSection config={config} update={update} />
@@ -29,6 +30,7 @@ export default function ControlPanel({
       <CornersSection config={config} update={update} />
       <ColorsSection config={config} update={update} />
       <LogoSection config={config} update={update} />
+      {config.label && <LabelSection config={config} update={update} />}
       <ExportSection
         config={config}
         update={update}
