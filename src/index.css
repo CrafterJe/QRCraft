@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+@theme {
+  /* ── Superficies ─────────────────────────────────────── */
+  --color-base:     #09090b;   /* fondo principal            */
+  --color-surface:  #111114;   /* paneles / header / cards   */
+  --color-edge:     #27272a;   /* bordes sutiles             */
+  --color-pit:      #050507;   /* fondo preview (más oscuro) */
+
+  /* ── Acento — morado ─────────────────────────────────── */
+  --color-primary:  #6366f1;   /* morado principal           */
+  --color-soft:     #818cf8;   /* morado claro               */
+  --color-faint:    #a5b4fc;   /* morado muy claro           */
+  --color-tint:     #1e1b4b;   /* fondo oscuro para activos  */
+
+  /* ── Texto ───────────────────────────────────────────── */
+  --color-pale:     #fafafa;   /* texto principal            */
+  --color-dim:      #71717a;   /* texto secundario / labels  */
+}
+
+/* Scrollbars ─────────────────────────────────────────── */
+.navbar-scroll::-webkit-scrollbar       { height: 3px; }
+.navbar-scroll::-webkit-scrollbar-track { background: #111114; }
+.navbar-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
+
+.panel-scroll::-webkit-scrollbar       { width: 4px; }
+.panel-scroll::-webkit-scrollbar-track { background: #111114; }
+.panel-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+
+/* Form controls ──────────────────────────────────────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; }

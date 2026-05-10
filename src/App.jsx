@@ -1,5 +1,5 @@
-function App() {
-  return null
-}
+import QRGenerator from './pages/generators/QRGenerator';
 
-export default App
+export default function App() {
+  return <QRGenerator />;
+}
