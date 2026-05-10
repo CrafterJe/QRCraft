@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador QR — TecnoFix</title>
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --card: #161b22; --border: #30363d;
+      --accent: #3b82f6; --accent2: #6366f1; --text: #f0f0f0; --muted: #8b949e;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 0;
+    }
+
+    /* HEADER */
+    header {
+      grid-column: 1 / -1;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header h1 { font-size: 18px; color: var(--accent); letter-spacing: .5px; }
+    header span { font-size: 12px; color: var(--muted); }
+
+    /* PANEL IZQUIERDO */
+    .panel {
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section { display: flex; flex-direction: column; gap: 8px; }
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      color: var(--muted); text-transform: uppercase;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+
+    label { font-size: 12px; color: var(--muted); margin-bottom: 3px; display: block; }
+    input[type="text"], input[type="number"], select {
+      width: 100%; padding: 9px 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 13px;
+      outline: none; transition: border .2s;
+    }
+    input[type="text"]:focus, select:focus { border-color: var(--accent); }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    /* OPCIONES VISUALES DE PUNTOS */
+    .dot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .dot-opt {
+      background: var(--bg); border: 2px solid var(--border);
+      border-radius: 10px; padding: 10px 6px;
+      cursor: pointer; text-align: center;
+      transition: border .15s, background .15s;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .dot-opt:hover { border-color: var(--accent); }
+    .dot-opt.active { border-color: var(--accent); background: #1e3a5f; }
+    .dot-opt svg { width: 36px; height: 36px; }
+    .dot-opt span { font-size: 10px; color: var(--muted); }
+
+    /* COLOR PICKERS */
+    .color-row { display: flex; align-items: center; gap: 10px; }
+    .color-swatch {
+      width: 36px; height: 36px; border-radius: 8px;
+      border: 2px solid var(--border); cursor: pointer;
+      flex-shrink: 0; overflow: hidden; position: relative;
+    }
+    .color-swatch input[type="color"] {
+      position: absolute; inset: -4px; width: calc(100% + 8px);
+      height: calc(100% + 8px); border: none; padding: 0;
+      cursor: pointer; background: none;
+    }
+    .color-swatch input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-swatch input[type="color"]::-webkit-color-swatch { border: none; }
+
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+    .toggle-row label { margin: 0; font-size: 13px; color: var(--text); }
+    .toggle {
+      position: relative; width: 40px; height: 22px;
+      background: var(--border); border-radius: 11px;
+      cursor: pointer; transition: background .2s; flex-shrink: 0;
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; background: #fff;
+      border-radius: 50%; transition: transform .2s;
+    }
+    .toggle.on::after { transform: translateX(18px); }
+
+    /* UPLOAD */
+    .upload-box {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 14px; text-align: center; cursor: pointer;
+      transition: border .2s; position: relative; background: var(--bg);
+    }
+    .upload-box:hover { border-color: var(--accent); }
+    .upload-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-box span { font-size: 12px; color: var(--muted); }
+    #logo-preview-img { width: 44px; height: 44px; object-fit: contain; display: none; margin: 0 auto 4px; }
+
+    /* BOTONES */
+    .btn {
+      padding: 11px; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: opacity .2s, transform .1s; width: 100%;
+    }
+    .btn:hover { opacity: .88; }
+    .btn:active { transform: scale(.98); }
+    .btn-blue  { background: var(--accent); color: #fff; }
+    .btn-green { background: #16a34a; color: #fff; }
+    .btn-purple{ background: var(--accent2); color: #fff; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* PANEL DERECHO — PREVIEW */
+    .preview-panel {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px; padding: 32px;
+      background: #0a0f16;
+    }
+    .preview-wrap {
+      background: #fff; border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 40px #00000088;
+      display: flex; align-items: center; justify-content: center;
+      min-width: 200px; min-height: 200px;
+    }
+    #qr-preview { display: block; }
+    .preview-label { font-size: 12px; color: var(--muted); }
+
+    .checkers {
+      background-image: linear-gradient(45deg,#1a1a2e 25%,transparent 25%),
+        linear-gradient(-45deg,#1a1a2e 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#1a1a2e 75%),
+        linear-gradient(-45deg,transparent 75%,#1a1a2e 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      border-radius: 16px;
+    }
+
+    #qr-preview canvas, #qr-preview svg { border-radius: var(--qr-radius, 0px); display: block; }
+
+    input[type="range"] { height: 6px; border-radius: 3px; }
+
+    /* scrollbar */
+    .panel::-webkit-scrollbar { width: 5px; }
+    .panel::-webkit-scrollbar-track { background: var(--card); }
+    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="4" height="4" rx=".5"/><rect x="20" y="14" width="1" height="1"/><rect x="14" y="20" width="1" height="1"/><rect x="18" y="18" width="3" height="3" rx=".5"/></svg>
+  <div>
+    <h1>Generador QR con Logo</h1>
+    <span>Diseño personalizado · Vista previa en tiempo real · Exporta PNG o SVG</span>
+  </div>
+</header>
+
+<!-- PANEL DE CONFIGURACIÓN -->
+<div class="panel">
+
+  <!-- URL -->
+  <div class="section">
+    <div class="section-title">Contenido</div>
+    <label>URL o texto</label>
+    <input type="text" id="qr-url" placeholder="https://..." value="https://maps.google.com/?q=TecnoFix+Puebla"/>
+    <div class="row2">
+      <div>
+        <label>Tamaño (px)</label>
+        <input type="number" id="qr-size" value="400" min="150" max="1000" step="50"/>
+      </div>
+      <div>
+        <label>Margen</label>
+        <input type="number" id="qr-margin" value="2" min="0" max="10"/>
+      </div>
+    </div>
+    <label>Corrección de error</label>
+    <select id="qr-ec">
+      <option value="M">M — Media</option>
+      <option value="Q">Q — Media-alta</option>
+      <option value="H" selected>H — Alta (recomendado con logo)</option>
+    </select>
+  </div>
+
+  <!-- ESQUINAS DEL QR COMPLETO -->
+  <div class="section">
+    <div class="section-title">Forma general del QR</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <label style="margin:0;">Esquinas redondeadas</label>
+      <span id="radius-val" style="font-size:13px;color:#60a5fa;font-weight:700;">0%</span>
+    </div>
+    <input type="range" id="qr-radius" min="0" max="15" value="0" step="1"
+      style="width:100%;accent-color:#3b82f6;cursor:pointer;"/>
+    <p style="font-size:11px;color:#555;margin-top:4px;">0% = puntas · 15% = muy redondeado</p>
+  </div>
+
+  <!-- PUNTOS -->
+  <div class="section">
+    <div class="section-title">Estilo de puntos</div>
+    <div class="dot-grid" id="dot-style-grid">
+      <div class="dot-opt active" data-val="square">
+        <svg viewBox="0 0 36 36"><rect x="4" y="4" width="8" height="8"/><rect x="14" y="4" width="8" height="8"/><rect x="24" y="4" width="8" height="8"/><rect x="4" y="14" width="8" height="8"/><rect x="24" y="14" width="8" height="8"/><rect x="4" y="24" width="8" height="8"/><rect x="14" y="24" width="8" height="8"/><rect x="24" y="24" width="8" height="8"/></svg>
+        <span>Cuadrado</span>
+      </div>
+      <div class="dot-opt" data-val="dots">
+        <svg viewBox="0 0 36 36"><circle cx="8" cy="8" r="4"/><circle cx="18" cy="8" r="4"/><circle cx="28" cy="8" r="4"/><circle cx="8" cy="18" r="4"/><circle cx="28" cy="18" r="4"/><circle cx="8" cy="28" r="4"/><circle cx="18" cy="28" r="4"/><circle cx="28" cy="28" r="4"/></svg>
+        <span>Círculos</span>
+      </div>
+      <div class="dot-opt" data-val="rounded">
+        <svg viewBox="0 0 36 36"><rect x="4" y="4" width="8" height="8" rx="2.5"/><rect x="14" y="4" width="8" height="8" rx="2.5"/><rect x="24" y="4" width="8" height="8" rx="2.5"/><rect x="4" y="14" width="8" height="8" rx="2.5"/><rect x="24" y="14" width="8" height="8" rx="2.5"/><rect x="4" y="24" width="8" height="8" rx="2.5"/><rect x="14" y="24" width="8" height="8" rx="2.5"/><rect x="24" y="24" width="8" height="8" rx="2.5"/></svg>
+        <span>Redondeado</span>
+      </div>
+      <div class="dot-opt" data-val="extra-rounded">
+        <svg viewBox="0 0 36 36"><rect x="4" y="4" width="8" height="8" rx="4"/><rect x="14" y="4" width="8" height="8" rx="4"/><rect x="24" y="4" width="8" height="8" rx="4"/><rect x="4" y="14" width="8" height="8" rx="4"/><rect x="24" y="14" width="8" height="8" rx="4"/><rect x="4" y="24" width="8" height="8" rx="4"/><rect x="14" y="24" width="8" height="8" rx="4"/><rect x="24" y="24" width="8" height="8" rx="4"/></svg>
+        <span>Oval</span>
+      </div>
+      <div class="dot-opt" data-val="classy">
+        <svg viewBox="0 0 36 36"><path d="M4 12 L4 4 L12 4"/><path d="M24 4 L32 4 L32 12"/><path d="M32 24 L32 32 L24 32"/><path d="M12 32 L4 32 L4 24"/><rect x="13" y="13" width="10" height="10" rx="1"/></svg>
+        <span>Clásico</span>
+      </div>
+      <div class="dot-opt" data-val="classy-rounded">
+        <svg viewBox="0 0 36 36"><path d="M4 12 Q4 4 12 4" fill="none" stroke="black" stroke-width="3"/><path d="M24 4 Q32 4 32 12" fill="none" stroke="black" stroke-width="3"/><path d="M32 24 Q32 32 24 32" fill="none" stroke="black" stroke-width="3"/><path d="M12 32 Q4 32 4 24" fill="none" stroke="black" stroke-width="3"/><rect x="13" y="13" width="10" height="10" rx="3"/></svg>
+        <span>Clás. Redondo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- OJOS (ESQUINAS) -->
+  <div class="section">
+    <div class="section-title">Estilo de esquinas (ojos)</div>
+    <div class="row2">
+      <div>
+        <label>Marco exterior</label>
+        <select id="corner-square-style">
+          <option value="square">Cuadrado</option>
+          <option value="extra-rounded">Extra redondeado</option>
+          <option value="dot">Punto</option>
+        </select>
+      </div>
+      <div>
+        <label>Punto interior</label>
+        <select id="corner-dot-style">
+          <option value="square">Cuadrado</option>
+          <option value="dot">Círculo</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLORES -->
+  <div class="section">
+    <div class="section-title">Colores</div>
+
+    <div class="toggle-row" style="margin-bottom:10px;">
+      <label>Usar degradado en puntos</label>
+      <div class="toggle" id="toggle-gradient" onclick="toggleGradient()"></div>
+    </div>
+
+    <div id="solid-colors">
+      <div class="row2">
+        <div>
+          <label>Color puntos</label>
+          <div class="color-row">
+            <div class="color-swatch"><input type="color" id="dot-color" value="#000000"/></div>
+            <input type="text" id="dot-color-hex" value="#000000"/>
+          </div>
+        </div>
+        <div>
+          <label>Fondo</label>
+          <div class="color-row">
+            <div class="color-swatch"><input type="color" id="bg-color" value="#ffffff"/></div>
+            <input type="text" id="bg-color-hex" value="#ffffff"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="gradient-colors" style="display:none;">
+      <div class="row2" style="margin-bottom:8px;">
+        <div>
+          <label>Color 1</label>
+          <div class="color-row">
+            <div class="color-swatch"><input type="color" id="grad-color1" value="#3b82f6"/></div>
+            <input type="text" id="grad-hex1" value="#3b82f6"/>
+          </div>
+        </div>
+        <div>
+          <label>Color 2</label>
+          <div class="color-row">
+            <div class="color-swatch"><input type="color" id="grad-color2" value="#6366f1"/></div>
+            <input type="text" id="grad-hex2" value="#6366f1"/>
+          </div>
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Tipo degradado</label>
+          <select id="grad-type">
+            <option value="linear">Lineal</option>
+            <option value="radial">Radial</option>
+          </select>
+        </div>
+        <div>
+          <label>Fondo</label>
+          <div class="color-row">
+            <div class="color-swatch"><input type="color" id="bg-color2" value="#ffffff"/></div>
+            <input type="text" id="bg-color-hex2" value="#ffffff"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <label>Color esquinas</label>
+      <div class="color-row">
+        <div class="color-swatch"><input type="color" id="eye-color" value="#000000"/></div>
+        <input type="text" id="eye-color-hex" value="#000000"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGO -->
+  <div class="section">
+    <div class="section-title">Logo central</div>
+    <div class="upload-box">
+      <input type="file" id="logo-file" accept=".svg,.png,.jpg,.jpeg,.webp"/>
+      <img id="logo-preview-img" src="" alt=""/>
+      <span id="logo-upload-label">Haz clic o arrastra tu logo aquí</span>
+    </div>
+    <div class="row2" id="logo-opts" style="display:none;">
+      <div>
+        <label>Tamaño logo (%)</label>
+        <input type="number" id="logo-size" value="22" min="5" max="40"/>
+      </div>
+      <div>
+        <label>Margen logo</label>
+        <input type="number" id="logo-margin" value="5" min="0" max="20"/>
+      </div>
+    </div>
+    <div id="logo-bg-toggle" style="display:none;">
+      <div class="toggle-row">
+        <label>Fondo blanco detrás del logo</label>
+        <div class="toggle" id="toggle-logo-bg" onclick="toggleLogoBg()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORTAR -->
+  <div class="section">
+    <div class="section-title">Exportar</div>
+    <label>Nombre de archivo</label>
+    <input type="text" id="file-name" value="qr-tecnofix" placeholder="nombre-archivo"/>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn btn-green" onclick="downloadFile('png')">Descargar PNG</button>
+      <button class="btn btn-purple" onclick="downloadFile('svg')">Descargar SVG</button>
+    </div>
+    <div id="svg-note" style="display:none;margin-top:8px;background:#1e2931;border:1px solid #60a5fa;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#93c5fd;line-height:1.6;">
+      Si Canva rechaza el SVG usa el botón <strong>Exportar para Canva (PNG 1200px)</strong>.
+    </div>
+    <button class="btn" style="margin-top:8px;background:#0f4c2a;color:#4ade80;border:1.5px solid #4ade80;" onclick="downloadForCanva()">
+      ⬇ Exportar para Canva (PNG 1200px)
+    </button>
+    <p style="font-size:11px;color:#555;margin-top:5px;text-align:center;">Canva no acepta SVG con logos — usa este botón</p>
+  </div>
+
+</div>
+
+<!-- PREVIEW PANEL -->
+<div class="preview-panel">
+  <div class="preview-wrap checkers">
+    <div id="qr-preview"></div>
+  </div>
+  <span class="preview-label" id="preview-info">Vista previa en tiempo real</span>
+</div>
+
+<script>
+  // ---- Estado ----
+  let logoUrl    = null;
+  let useGradient = false;
+  let hideLogoBg  = true;
+  let dotStyle    = 'square';
+  let qrInstance  = null;
+
+  // ---- Inicializar QR ----
+  function buildOptions() {
+    const size    = parseInt(document.getElementById('qr-size').value) || 400;
+    const margin  = parseInt(document.getElementById('qr-margin').value) || 0;
+    const ec      = document.getElementById('qr-ec').value;
+    const url     = document.getElementById('qr-url').value.trim() || 'https://tecnofix.com';
+    const csStyle = document.getElementById('corner-square-style').value;
+    const cdStyle = document.getElementById('corner-dot-style').value;
+    const eyeColor= document.getElementById('eye-color').value;
+
+    let dotsOptions;
+    if (useGradient) {
+      const c1 = document.getElementById('grad-color1').value;
+      const c2 = document.getElementById('grad-color2').value;
+      const gt = document.getElementById('grad-type').value;
+      dotsOptions = {
+        type: dotStyle,
+        gradient: {
+          type: gt,
+          rotation: 45,
+          colorStops: [
+            { offset: 0, color: c1 },
+            { offset: 1, color: c2 }
+          ]
+        }
+      };
+    } else {
+      dotsOptions = { type: dotStyle, color: document.getElementById('dot-color').value };
+    }
+
+    const bgColor = useGradient
+      ? document.getElementById('bg-color2').value
+      : document.getElementById('bg-color').value;
+
+    const opts = {
+      width:  size, height: size,
+      data:   url,
+      margin: margin,
+      qrOptions: { errorCorrectionLevel: ec },
+      dotsOptions,
+      backgroundOptions: { color: bgColor },
+      cornersSquareOptions: { type: csStyle, color: eyeColor },
+      cornersDotOptions:    { type: cdStyle, color: eyeColor },
+    };
+
+    if (logoUrl) {
+      opts.image = logoUrl;
+      opts.imageOptions = {
+        width:  size * (parseInt(document.getElementById('logo-size').value) / 100),
+        height: size * (parseInt(document.getElementById('logo-size').value) / 100),
+        margin: parseInt(document.getElementById('logo-margin').value) || 5,
+        hideBackgroundDots: hideLogoBg,
+        crossOrigin: 'anonymous'
+      };
+    }
+
+    return opts;
+  }
+
+  function renderQR() {
+    const opts = buildOptions();
+    if (!qrInstance) {
+      qrInstance = new QRCodeStyling(opts);
+      qrInstance.append(document.getElementById('qr-preview'));
+    } else {
+      qrInstance.update(opts);
+    }
+    document.getElementById('preview-info').textContent =
+      `${opts.width} × ${opts.height} px · ${opts.data.substring(0,40)}${opts.data.length>40?'…':''}`;
+  }
+
+
+  // ---- Degradado toggle ----
+  function toggleGradient() {
+    useGradient = !useGradient;
+    document.getElementById('toggle-gradient').classList.toggle('on', useGradient);
+    document.getElementById('solid-colors').style.display    = useGradient ? 'none'  : 'block';
+    document.getElementById('gradient-colors').style.display = useGradient ? 'block' : 'none';
+    renderQR();
+  }
+
+  // ---- Logo BG toggle ----
+  function toggleLogoBg() {
+    hideLogoBg = !hideLogoBg;
+    document.getElementById('toggle-logo-bg').classList.toggle('on', hideLogoBg);
+
+    renderQR();
+  }
+
+  // ---- Dot style grid ----
+  document.getElementById('dot-style-grid').addEventListener('click', e => {
+    const opt = e.target.closest('.dot-opt');
+    if (!opt) return;
+    document.querySelectorAll('.dot-opt').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    dotStyle = opt.dataset.val;
+    renderQR();
+  });
+
+  // ---- Sincronizar color pickers ↔ inputs hex ----
+  function syncColor(pickerId, hexId) {
+    const picker = document.getElementById(pickerId);
+    const hex    = document.getElementById(hexId);
+    picker.addEventListener('input', () => { hex.value = picker.value; renderQR(); });
+    hex.addEventListener('input', () => {
+      if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) { picker.value = hex.value; renderQR(); }
+    });
+  }
+  syncColor('dot-color','dot-color-hex');
+  syncColor('bg-color','bg-color-hex');
+  syncColor('grad-color1','grad-hex1');
+  syncColor('grad-color2','grad-hex2');
+  syncColor('bg-color2','bg-color-hex2');
+  syncColor('eye-color','eye-color-hex');
+
+  // ---- Inputs genéricos → re-render ----
+  ['qr-url','qr-size','qr-margin','qr-ec',
+   'corner-square-style','corner-dot-style',
+   'logo-size','logo-margin','grad-type']
+  .forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', renderQR);
+  });
+
+  // ---- Logo upload ----
+  document.getElementById('logo-file').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      logoUrl = ev.target.result;
+      const img = document.getElementById('logo-preview-img');
+      img.src = logoUrl; img.style.display = 'block';
+      document.getElementById('logo-upload-label').textContent = file.name;
+      document.getElementById('logo-opts').style.display = 'grid';
+      document.getElementById('logo-bg-toggle').style.display = 'block';
+      renderQR();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ---- Esquinas redondeadas ----
+  const radiusSlider = document.getElementById('qr-radius');
+  const radiusVal    = document.getElementById('radius-val');
+
+  function getRadiusPx() {
+    const size = parseInt(document.getElementById('qr-size').value) || 400;
+    return Math.round(size * (parseInt(radiusSlider.value) / 100));
+  }
+
+  function applyRadiusCSS() {
+    const pct = parseInt(radiusSlider.value);
+    radiusVal.textContent = pct + '%';
+    document.getElementById('qr-preview').style.setProperty('--qr-radius', getRadiusPx() + 'px');
+    // También al contenedor para que el overflow quede cortado
+    const preview = document.getElementById('qr-preview');
+    preview.style.borderRadius = getRadiusPx() + 'px';
+    preview.style.overflow     = 'hidden';
+  }
+
+  radiusSlider.addEventListener('input', () => { applyRadiusCSS(); });
+
+  // ---- Helper: canvas con esquinas redondeadas ----
+  function roundedCanvas(srcCanvas, radius) {
+    const w = srcCanvas.width, h = srcCanvas.height;
+    const dst = document.createElement('canvas');
+    dst.width = w; dst.height = h;
+    const ctx = dst.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(w - radius, 0);
+    ctx.quadraticCurveTo(w, 0, w, radius);
+    ctx.lineTo(w, h - radius);
+    ctx.quadraticCurveTo(w, h, w - radius, h);
+    ctx.lineTo(radius, h);
+    ctx.quadraticCurveTo(0, h, 0, h - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(srcCanvas, 0, 0);
+    return dst;
+  }
+
+  // ---- Descarga ----
+  function downloadFile(ext) {
+    const name   = document.getElementById('file-name').value.trim() || 'qr-tecnofix';
+    const radius = getRadiusPx();
+
+    if (ext === 'svg') {
+      qrInstance.download({ name, extension: 'svg' });
+      return;
+    }
+
+    if (ext === 'png' && radius > 0) {
+      // Renderizar en canvas temporal y aplicar clip redondeado
+      const size    = parseInt(document.getElementById('qr-size').value) || 400;
+      const tmpDiv  = document.createElement('div');
+      tmpDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+      document.body.appendChild(tmpDiv);
+      const tmpOpts = { ...buildOptions(), width: size, height: size };
+      const tmpQR   = new QRCodeStyling(tmpOpts);
+      tmpQR.append(tmpDiv);
+      setTimeout(() => {
+        const srcCanvas = tmpDiv.querySelector('canvas');
+        if (srcCanvas) {
+          const dst  = roundedCanvas(srcCanvas, radius);
+          const link = document.createElement('a');
+          link.download = name + '.png';
+          link.href = dst.toDataURL('image/png');
+          link.click();
+        }
+        document.body.removeChild(tmpDiv);
+      }, 300);
+      return;
+    }
+
+    qrInstance.download({ name, extension: ext });
+  }
+
+  function downloadForCanva() {
+    const name      = document.getElementById('file-name').value.trim() || 'qr-tecnofix';
+    const canvaSize = 1200;
+    const radius    = Math.round(canvaSize * (parseInt(radiusSlider.value) / 100));
+    const opts      = buildOptions();
+    const logoSizePct = parseInt(document.getElementById('logo-size').value) / 100;
+
+    const canvaOpts = {
+      ...opts,
+      width: canvaSize, height: canvaSize,
+      imageOptions: logoUrl ? {
+        src: logoUrl,
+        width:  canvaSize * logoSizePct,
+        height: canvaSize * logoSizePct,
+        margin: parseInt(document.getElementById('logo-margin').value) || 5,
+        hideBackgroundDots: hideLogoBg,
+        crossOrigin: 'anonymous'
+      } : undefined,
+      image: logoUrl || undefined
+    };
+
+    if (radius > 0) {
+      const tmpDiv = document.createElement('div');
+      tmpDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+      document.body.appendChild(tmpDiv);
+      const tmpQR = new QRCodeStyling(canvaOpts);
+      tmpQR.append(tmpDiv);
+      setTimeout(() => {
+        const srcCanvas = tmpDiv.querySelector('canvas');
+        if (srcCanvas) {
+          const dst  = roundedCanvas(srcCanvas, radius);
+          const link = document.createElement('a');
+          link.download = name + '-canva.png';
+          link.href = dst.toDataURL('image/png');
+          link.click();
+        }
+        document.body.removeChild(tmpDiv);
+      }, 400);
+    } else {
+      const tmpQR = new QRCodeStyling(canvaOpts);
+      tmpQR.download({ name: name + '-canva', extension: 'png' });
+    }
+  }
+
+  // ---- Init ----
+  document.getElementById('toggle-logo-bg').classList.add('on');
+  renderQR();
+  applyRadiusCSS();
+</script>
+</body>
+</html>
